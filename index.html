@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Тренажёр: Оконные приложения на tkinter</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #1e1e2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 24px; }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    background: linear-gradient(90deg, #89b4fa, #cba6f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { margin: 0; color: #a6adc8; font-size: 14px; }
+
+  .progress-wrap {
+    background: #313244;
+    border-radius: 10px;
+    height: 10px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #a6e3a1, #89b4fa);
+    width: 0%;
+    transition: width 0.4s;
+  }
+  .progress-text {
+    text-align: center;
+    color: #a6adc8;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  .nav button {
+    background: #45475a;
+    color: #e0e0e0;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+  .nav button:hover:not(:disabled) { background: #585b70; }
+  .nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .task-counter {
+    font-size: 14px;
+    color: #a6adc8;
+    text-align: center;
+    flex-grow: 1;
+  }
+
+  .task {
+    display: none;
+    background: #313244;
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .task.active { display: block; }
+
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .task h2 { margin: 0; font-size: 20px; color: #f9e2af; }
+  .level {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+  .level-1 { background: #a6e3a1; color: #1e1e2e; }
+  .level-2 { background: #f9e2af; color: #1e1e2e; }
+  .level-3 { background: #f38ba8; color: #1e1e2e; }
+
+  .task p { color: #cdd6f4; line-height: 1.6; margin: 8px 0; }
+  .task .goal {
+    background: #45475a;
+    border-left: 4px solid #89b4fa;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .task .goal strong { color: #89b4fa; }
+
+  .gif-wrap { margin: 18px 0; text-align: center; }
+  .gif-wrap img {
+    max-width: 100%;
+    border-radius: 10px;
+    border: 2px solid #45475a;
+    background: #fff;
+  }
+  .gif-wrap .gif-fallback {
+    display: none;
+    padding: 20px;
+    background: #45475a;
+    border-radius: 10px;
+    color: #a6adc8;
+    font-size: 13px;
+  }
+
+  .hint-box {
+    margin: 16px 0;
+    background: #3a3a1e;
+    border-left: 4px solid #f9e2af;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .hint-box summary {
+    padding: 12px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #f9e2af;
+    user-select: none;
+    list-style: none;
+  }
+  .hint-box summary::-webkit-details-marker { display: none; }
+  .hint-box summary::before {
+    content: '▸ ';
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .hint-box[open] summary::before { transform: rotate(90deg); }
+  .hint-box .hint-content {
+    padding: 0 16px 16px;
+    color: #cdd6f4;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .hint-box .hint-content code {
+    background: #1e1e2e;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #fab387;
+    font-size: 13px;
+  }
+  .hint-box .hint-content p { margin: 6px 0; }
+
+  pre {
+    background: #181825;
+    color: #cdd6f4;
+    padding: 16px;
+    border-radius: 0;
+    overflow-x: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 0;
+    border-left: 3px solid #89b4fa;
+    white-space: pre;
+  }
+  pre code {
+    display: block;
+    font-family: inherit;
+  }
+
+  /* Подсветка синтаксиса */
+  .tok-com  { color: #6c7086; font-style: italic; }
+  .tok-kw   { color: #cba6f7; font-weight: 600; }
+  .tok-fn   { color: #89b4fa; }
+  .tok-str  { color: #a6e3a1; }
+  .tok-num  { color: #fab387; }
+  .tok-var  { color: #f9e2af; }
+  .tok-op   { color: #94e2d5; }
+  .tok-blt  { color: #f38ba8; }
+
+  .copy-btn {
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    float: right;
+    margin: 8px;
+    font-family: inherit;
+  }
+  .copy-btn:hover { background: #585b70; }
+
+  .mark-done {
+    margin-top: 20px;
+    background: #a6e3a1;
+    color: #1e1e2e;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: inherit;
+  }
+  .mark-done.done {
+    background: #45475a;
+    color: #a6e3a1;
+  }
+  .mark-done:hover { opacity: 0.85; }
+
+  .reference-note {
+    background: #1e1e2e;
+    border: 1px dashed #6c7086;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #a6adc8;
+  }
+  .reference-note strong { color: #89b4fa; }
+  .reference-note code {
+    background: #313244;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #fab387;
+  }
+
+  .task-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0 20px;
+    flex-wrap: wrap;
+  }
+  .dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #45475a;
+    color: #cdd6f4;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .dot:hover { background: #585b70; transform: scale(1.1); }
+  .dot.active { background: #89b4fa; color: #1e1e2e; transform: scale(1.15); }
+  .dot.done { background: #a6e3a1; color: #1e1e2e; }
+  .dot.active.done { background: #89b4fa; color: #1e1e2e; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🖥️ Тренажёр: Оконные приложения на tkinter</h1>
+    <p>БАЗЫ ДАННЫХ · Введение в бизнес-процессы</p>
+    <p style="margin-top:8px; font-size:12px; color:#6c7086;">Переключай задачи стрелками ← → на клавиатуре или кнопками</p>
+  </header>
+
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-text" id="progressText">Решено: 0 из 9</div>
+
+  <div class="task-dots" id="taskDots"></div>
+
+  <div class="nav">
+    <button id="prevBtn" type="button">← Назад</button>
+    <div class="task-counter" id="taskCounter">Задача 0 / 8</div>
+    <button id="nextBtn" type="button">Вперёд →</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 0: ЭТАЛОН ================= -->
+  <div class="task active" data-index="0">
+    <div class="task-header">
+      <h2>📘 Эталонный пример</h2>
+      <span class="level level-1">Ориентир</span>
+    </div>
+    <p>Изучи этот код. Он показывает, как создавать окно, Label, поле ввода, кнопки и связывать их с функциями. На него можно ориентироваться при решении всех задач.</p>
+
+    <div class="reference-note">
+      <strong>💡 Что важно запомнить:</strong><br>
+      1. <code>tkinter.Tk()</code> — создаём окно.<br>
+      2. <code>tkinter.Label(...)</code>, <code>tkinter.Entry(...)</code>, <code>tkinter.Button(...)</code> — создаём виджеты.<br>
+      3. <code>.place(x=..., y=...)</code> — размещаем их в окне.<br>
+      4. <code>command=имя_функции</code> — БЕЗ скобок! Иначе функция вызовется сразу.<br>
+      5. <code>mainloop()</code> — запускаем окно в конце.
+    </div>
+
+    <button class="copy-btn" type="button" onclick="copyCode('refCode')">📋 Копировать</button>
+
+    <pre id="refCode"><code><span class="tok-blt">import</span> <span class="tok-var">tkinter</span>
+
+<span class="tok-com"># Создаём окно программы</span>
+<span class="tok-var">master</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Tk</span>()
+<span class="tok-var">master</span>.<span class="tok-fn">title</span>(<span class="tok-str">'Оконное приложение'</span>)
+<span class="tok-var">master</span>.<span class="tok-fn">geometry</span>(<span class="tok-str">'300x250'</span>)
+
+<span class="tok-com"># Создаём Label и размещаем его</span>
+<span class="tok-var">label</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Label</span>(<span class="tok-var">text</span><span class="tok-op">=</span><span class="tok-str">'Я Label'</span>)
+<span class="tok-var">label</span>.<span class="tok-fn">place</span>(<span class="tok-var">x</span><span class="tok-op">=</span><span class="tok-num">20</span>, <span class="tok-var">y</span><span class="tok-op">=</span><span class="tok-num">20</span>)
+
+<span class="tok-com"># Специальная переменная для хранения значения поля ввода</span>
+<span class="tok-var">entry_var</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">StringVar</span>()
+
+<span class="tok-com"># Создаём поле ввода</span>
+<span class="tok-var">entry1</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Entry</span>(<span class="tok-var">textvariable</span><span class="tok-op">=</span><span class="tok-var">entry_var</span>, <span class="tok-var">width</span><span class="tok-op">=</span><span class="tok-num">40</span>)
+<span class="tok-var">entry1</span>.<span class="tok-fn">place</span>(<span class="tok-var">x</span><span class="tok-op">=</span><span class="tok-num">20</span>, <span class="tok-var">y</span><span class="tok-op">=</span><span class="tok-num">60</span>)
+
+<span class="tok-com"># Кнопка 1 — изменить текст Label</span>
+<span class="tok-kw">def</span> <span class="tok-fn">btn1click</span>():
+    <span class="tok-var">label</span>[<span class="tok-str">'text'</span>] <span class="tok-op">=</span> <span class="tok-str">'Здравствуй мир!'</span>
+
+<span class="tok-var">btn1</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Button</span>(<span class="tok-var">text</span><span class="tok-op">=</span><span class="tok-str">'Изменить Label'</span>, <span class="tok-var">command</span><span class="tok-op">=</span><span class="tok-var">btn1click</span>)
+<span class="tok-var">btn1</span>.<span class="tok-fn">place</span>(<span class="tok-var">x</span><span class="tok-op">=</span><span class="tok-num">20</span>, <span class="tok-var">y</span><span class="tok-op">=</span><span class="tok-num">100</span>)
+
+<span class="tok-com"># Кнопка 2 — задать значение в поле ввода</span>
+<span class="tok-kw">def</span> <span class="tok-fn">btn2click</span>():
+    <span class="tok-var">entry_var</span>.<span class="tok-fn">set</span>(<span class="tok-str">'Новое значение'</span>)
+
+<span class="tok-var">btn2</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Button</span>(<span class="tok-var">text</span><span class="tok-op">=</span><span class="tok-str">'Задать значение Entry'</span>, <span class="tok-var">command</span><span class="tok-op">=</span><span class="tok-var">btn2click</span>)
+<span class="tok-var">btn2</span>.<span class="tok-fn">place</span>(<span class="tok-var">x</span><span class="tok-op">=</span><span class="tok-num">20</span>, <span class="tok-var">y</span><span class="tok-op">=</span><span class="tok-num">140</span>)
+
+<span class="tok-com"># Кнопка 3 — прочитать значение поля ввода и показать в Label</span>
+<span class="tok-kw">def</span> <span class="tok-fn">btn3click</span>():
+    <span class="tok-var">label</span>[<span class="tok-str">'text'</span>] <span class="tok-op">=</span> <span class="tok-var">entry_var</span>.<span class="tok-fn">get</span>()
+
+<span class="tok-var">btn3</span> <span class="tok-op">=</span> <span class="tok-var">tkinter</span>.<span class="tok-fn">Button</span>(<span class="tok-var">text</span><span class="tok-op">=</span><span class="tok-str">'Прочитать значение Entry'</span>, <span class="tok-var">command</span><span class="tok-op">=</span><span class="tok-var">btn3click</span>)
+<span class="tok-var">btn3</span>.<span class="tok-fn">place</span>(<span class="tok-var">x</span><span class="tok-op">=</span><span class="tok-num">20</span>, <span class="tok-var">y</span><span class="tok-op">=</span><span class="tok-num">180</span>)
+
+<span class="tok-com"># Запускаем окно</span>
+<span class="tok-var">master</span>.<span class="tok-fn">mainloop</span>()
+</code></pre>
+
+    <button class="mark-done" type="button" data-id="0">✓ Отметить как изученное</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 1 ================= -->
+  <div class="task" data-index="1">
+    <div class="task-header">
+      <h2>Задача 1. Счётчик</h2>
+      <span class="level level-1">Уровень 1</span>
+    </div>
+    <p>Создайте оконное приложение со счётчиком. При клике на кнопку значение Label должно увеличиваться на единицу.</p>
+    <div class="goal"><strong>Цель:</strong> каждое нажатие — +1 к числу на экране. Начни с 1.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/1_893.gif" alt="Демо счётчика" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен (нет интернета или ссылка недоступна). Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>Тебе нужна <strong>глобальная переменная</strong> для хранения значения.</p>
+        <p>Внутри функции не забудь написать <code>global value</code>, иначе Python будет считать, что ты создаёшь новую локальную переменную, и выдаст ошибку.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="1">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 2 ================= -->
+  <div class="task" data-index="2">
+    <div class="task-header">
+      <h2>Задача 2. Зеркало</h2>
+      <span class="level level-2">Уровень 2</span>
+    </div>
+    <p>Создайте окно с двумя полями ввода и кнопкой. При клике на кнопку значения, введённые в поля ввода, должны поменяться местами.</p>
+    <div class="goal"><strong>Цель:</strong> после клика содержимое первого поля оказывается во втором, и наоборот.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/2_394.gif" alt="Демо зеркала" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>Тебе нужны <strong>две переменные</strong> <code>StringVar()</code> — по одной на каждое поле.</p>
+        <p>Внутри функции сначала сохрани значение первого поля в отдельную переменную (<code>val1 = var1.get()</code>), потом перезапиши первое вторым, а затем запиши сохранённое во второе.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="2">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 3 ================= -->
+  <div class="task" data-index="3">
+    <div class="task-header">
+      <h2>Задача 3. Генератор полей ввода</h2>
+      <span class="level level-3">Уровень 3</span>
+    </div>
+    <p>Разместите поле ввода (по умолчанию 0) и кнопку. При нажатии должны сгенерироваться новые поля ввода — их количество определяется значением в первоначальном поле. При повторном нажатии старые поля удаляются.</p>
+    <div class="goal"><strong>Цель:</strong> генерация N полей ввода по числу N. Перед пересозданием — удалить старые через <code>.destroy()</code>.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/3_834.gif" alt="Демо генератора" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>1. Заведи <strong>список</strong> <code>entry_list = []</code> — в нём будешь хранить ссылки на созданные поля.</p>
+        <p>2. Внутри функции объяви <code>global entry_list</code>, потому что ты будешь перезаписывать список целиком.</p>
+        <p>3. Сначала удали старые: пройди по списку и вызови у каждого <code>i.destroy()</code>, потом очисти список (<code>entry_list = []</code>).</p>
+        <p>4. Считай число из поля через <code>int(var1.get())</code>.</p>
+        <p>5. В цикле <code>for i in range(count)</code> создавай <code>tkinter.Entry(width=5)</code>, вычисляй <code>left = 20 + i * 40</code> и вызывай <code>.place(x=left, y=60)</code>.</p>
+        <p>6. Не забудь <code>entry_list.append(x)</code>, иначе при следующем клике не сможешь удалить поля.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="3">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 4 ================= -->
+  <div class="task" data-index="4">
+    <div class="task-header">
+      <h2>Задача 4. Генератор матрицы</h2>
+      <span class="level level-3">Уровень 3</span>
+    </div>
+    <p>Разместите 2 поля ввода (строки и столбцы) и кнопку. По умолчанию — 0. При клике генерируется матрица из полей ввода. Повторный клик пересоздаёт матрицу, удаляя старую.</p>
+    <div class="goal"><strong>Цель:</strong> вложенный цикл по строкам и столбцам, позиционирование по сетке.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/4_823.gif" alt="Демо матрицы" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>1. Два <code>StringVar()</code>: <code>lines</code> и <code>cols</code>. Оба <code>.set(0)</code>.</p>
+        <p>2. Внутри <code>btn1click</code> очисти <code>entry_list</code> так же, как в задаче 3.</p>
+        <p>3. Считай: <code>lines_val = int(lines.get())</code>, <code>cols_val = int(cols.get())</code>.</p>
+        <p>4. Двойной цикл: внешний по <code>i in range(lines_val)</code>, внутренний по <code>j in range(cols_val)</code>.</p>
+        <p>5. <code>top = 100 + i * 20</code> — сдвиг по вертикали (по строкам). <code>left = 20 + j * 40</code> — сдвиг по горизонтали (по столбцам).</p>
+        <p>6. Не забудь <code>entry_list.append(x)</code>.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="4">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 4.1 ================= -->
+  <div class="task" data-index="5">
+    <div class="task-header">
+      <h2>Задача 4.1. Сплошная нумерация</h2>
+      <span class="level level-3">Уровень 3</span>
+    </div>
+    <p>Доработайте задачу 4: каждое сгенерированное поле должно содержать свой номер, начиная с 1.</p>
+    <div class="goal"><strong>Цель:</strong> добавить в матрицу счётчик и <code>StringVar</code> для каждого поля.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/4_1_104.gif" alt="Демо матрицы" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>1. Заведи <strong>второй список</strong>: <code>entry_vars = []</code> — туда будешь складывать <code>StringVar</code>'ы.</p>
+        <p>2. Перед циклами: <code>counter = 0</code>.</p>
+        <p>3. Во внутреннем цикле: <code>counter += 1</code>, создай <code>entry_var = tkinter.StringVar()</code>, затем <code>entry_var.set(counter)</code>.</p>
+        <p>4. Передай <code>textvariable=entry_var</code> в <code>tkinter.Entry(...)</code>.</p>
+        <p>5. <code>entry_vars.append(entry_var)</code> — понадобится в задачах 4.2 и 4.3.</p>
+        <p>6. Не забудь в начале функции очистить и <code>entry_vars</code>: объяви <code>global entry_vars</code> и <code>entry_vars = []</code>.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="5">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 4.2 ================= -->
+  <div class="task" data-index="6">
+    <div class="task-header">
+      <h2>Задача 4.2. Сдвиг влево</h2>
+      <span class="level level-3">Уровень 3</span>
+    </div>
+    <p>Добавьте кнопку «Влево». При клике значение каждого поля перемещается в предыдущее. Значение из первого поля уходит в последнее.</p>
+    <div class="goal"><strong>Цель:</strong> циклический сдвиг значений по кругу влево.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/4_2_836.gif" alt="Демо сдвига влево" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>1. Сначала проверь: если <code>len(entry_vars) == 0</code> — <code>return</code> (матрица ещё не сгенерирована).</p>
+        <p>2. Сохрани первое значение: <code>first = entry_vars[0].get()</code>.</p>
+        <p>3. Пройди циклом <code>for i in range(1, len(entry_vars))</code> и присвой <code>entry_vars[i-1].set(entry_vars[i].get())</code>.</p>
+        <p>4. В последнее поле запиши сохранённое первое: <code>entry_vars[-1].set(first)</code>.</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="6">✓ Отметить как решённую</button>
+  </div>
+
+  <!-- ================= ЗАДАЧА 4.3 ================= -->
+  <div class="task" data-index="7">
+    <div class="task-header">
+      <h2>Задача 4.3. Сдвиг вправо</h2>
+      <span class="level level-3">Уровень 3</span>
+    </div>
+    <p>Добавьте кнопку «Вправо». Значения сдвигаются вправо, последнее значение переходит в первое.</p>
+    <div class="goal"><strong>Цель:</strong> циклический сдвиг значений вправо.</div>
+    <div class="gif-wrap">
+      <img src="https://anosoff.com/files/m/py3/r/12/4_3_128.gif" alt="Демо сдвига вправо" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div class="gif-fallback">GIF недоступен. Смотри описание задачи выше.</div>
+    </div>
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <div class="hint-content">
+        <p>1. Снова проверь пустоту: <code>if len(entry_vars) == 0: return</code>.</p>
+        <p>2. Сохрани последнее значение: <code>last = entry_vars[-1].get()</code>.</p>
+        <p>3. Иди циклом <strong>с конца в начало</strong>: <code>for i in range(len(entry_vars) - 1, 0, -1)</code> и присвой <code>entry_vars[i].set(entry_vars[i-1].get())</code>.</p>
+        <p>4. В первое поле запиши сохранённое: <code>entry_vars[0].set(last)</code>.</p>
+        <p>5. <strong>Важно:</strong> если идти с начала, ты затрёшь значения, которые ещё не сдвинул. Поэтому — только с конца!</p>
+      </div>
+    </details>
+    <button class="mark-done" type="button" data-id="7">✓ Отметить как решённую</button>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var tasks = document.querySelectorAll('.task');
+  var total = tasks.length;
+  var current = 0;
+  var done = JSON.parse(localStorage.getItem('tk_done') || '{}');
+
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var counter = document.getElementById('taskCounter');
+  var progressBar = document.getElementById('progressBar');
+  var progressText = document.getElementById('progressText');
+  var dotsContainer = document.getElementById('taskDots');
+
+  // Создаём точки-навигацию
+  for (var i = 0; i < total; i++) {
+    var dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'dot';
+    dot.textContent = i;
+    dot.setAttribute('data-idx', i);
+    dot.title = 'Задача ' + i;
+    dot.addEventListener('click', (function(idx) {
+      return function() { showTask(idx); };
+    })(i));
+    dotsContainer.appendChild(dot);
+  }
+
+  function updateDots() {
+    var dots = dotsContainer.querySelectorAll('.dot');
+    for (var k = 0; k < dots.length; k++) {
+      dots[k].classList.remove('active');
+      dots[k].classList.remove('done');
+      if (k === current) dots[k].classList.add('active');
+      if (done[k]) dots[k].classList.add('done');
+    }
+  }
+
+  function showTask(idx) {
+    if (idx < 0 || idx >= total) return;
+    for (var i = 0; i < tasks.length; i++) {
+      tasks[i].classList.remove('active');
+    }
+    tasks[idx].classList.add('active');
+    current = idx;
+
+    counter.textContent = 'Задача ' + idx + ' / ' + (total - 1);
+    prevBtn.disabled = (idx === 0);
+    nextBtn.disabled = (idx === total - 1);
+
+    updateDots();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress() {
+    var count = 0;
+    for (var key in done) {
+      if (done[key]) count++;
+    }
+    var pct = Math.round(count / total * 100);
+    progressBar.style.width = pct + '%';
+    progressText.textContent = 'Решено: ' + count + ' из ' + total;
+  }
+
+  prevBtn.addEventListener('click', function() { showTask(current - 1); });
+  nextBtn.addEventListener('click', function() { showTask(current + 1); });
+
+  // Стрелки на клавиатуре
+  document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      showTask(current - 1);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      showTask(current + 1);
+    }
+  });
+
+  // Кнопки "отметить как решённую"
+  var markButtons = document.querySelectorAll('.mark-done');
+  for (var j = 0; j < markButtons.length; j++) {
+    (function(btn) {
+      var id = btn.getAttribute('data-id');
+      if (done[id]) {
+        btn.classList.add('done');
+        btn.textContent = '✓ Готово';
+      }
+      btn.addEventListener('click', function() {
+        done[id] = !done[id];
+        if (done[id]) {
+          btn.classList.add('done');
+          btn.textContent = '✓ Готово';
+        } else {
+          btn.classList.remove('done');
+          btn.textContent = (id === '0') ? '✓ Отметить как изученное' : '✓ Отметить как решённую';
+        }
+        localStorage.setItem('tk_done', JSON.stringify(done));
+        updateProgress();
+        updateDots();
+      });
+    })(markButtons[j]);
+  }
+
+  // Копирование кода
+  window.copyCode = function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var text = el.textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        alert('Код скопирован!');
+      }).catch(function() {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  };
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); alert('Код скопирован!'); }
+    catch (e) { alert('Не удалось скопировать'); }
+    document.body.removeChild(ta);
+  }
+
+  // Инициализация
+  showTask(0);
+  updateProgress();
+})();
+</script>
+</body>
+</html>
